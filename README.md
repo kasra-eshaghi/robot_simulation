@@ -1,1 +1,1 @@
-# My New Project
+# Simulating a maze solving robot
