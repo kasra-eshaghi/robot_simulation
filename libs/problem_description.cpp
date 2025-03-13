@@ -37,68 +37,40 @@ void Problem::print_problem_config(){
 
 }
 
-std::vector<std::vector<int>> Problem::get_map_data(std::ifstream& csv_file){
-    std::vector<std::vector<int>> map;
-    std::vector<int> map_row;
-    std::string csv_file_row;
-    while (std::getline(csv_file, csv_file_row)){
+// std::vector<std::vector<int>> Problem::get_map_data(std::ifstream& csv_file){
+//     std::vector<std::vector<int>> map;
+//     std::vector<int> map_row;
+//     std::string csv_file_row;
+//     while (std::getline(csv_file, csv_file_row)){
         
-        std::stringstream csv_file_row_ss(csv_file_row);
-        std::string occupancy;
-        while (std::getline(csv_file_row_ss, occupancy, ',')){
-            map_row.push_back(std::stoi(occupancy));
-        }
-        map.push_back(map_row);
-        map_row.clear();
-    }
+//         std::stringstream csv_file_row_ss(csv_file_row);
+//         std::string occupancy;
+//         while (std::getline(csv_file_row_ss, occupancy, ',')){
+//             map_row.push_back(std::stoi(occupancy));
+//         }
+//         map.push_back(map_row);
+//         map_row.clear();
+//     }
 
-    return map;
-}
+//     return map;
+// }
 
-Pose Problem::get_pose_data(const YAML::Node& config_yaml, const std::string& pose_name){
-    Pose pose;
-    pose.x =  config_yaml["problem"][pose_name][0].as<int>();
-    pose.y =  config_yaml["problem"][pose_name][1].as<int>();
-    pose.theta = config_yaml["problem"][pose_name][2].as<int>();
+// Pose Problem::get_pose_data(const YAML::Node& config_yaml, const std::string& pose_name){
+//     Pose pose;
+//     pose.x =  config_yaml["problem"][pose_name][0].as<int>();
+//     pose.y =  config_yaml["problem"][pose_name][1].as<int>();
+//     pose.theta = config_yaml["problem"][pose_name][2].as<int>();
 
-    // check feasibility of pose
-    int n_rows = map.size();
-    int n_columns = map[0].size();
-    if (pose.x >= n_rows or pose.x < 0 or pose.y >= n_columns or pose.y < 0){
-        throw std::invalid_argument(pose_name  + " not in map!");
-    }
-    if (map[pose.x][pose.y] == 1){
-        throw std::invalid_argument(pose_name + " not free!");
-    }
-
-    return pose;
-}
-
-// void Problem::check_pose_data(){
+//     // check feasibility of pose
 //     int n_rows = map.size();
 //     int n_columns = map[0].size();
-
-//     // Check if poses are within map
-//     if (initial_pose.x >= n_rows or initial_pose.x < 0 or initial_pose.y >= n_columns or initial_pose.y < 0){
-//         throw std::invalid_argument("Initial pose not in map!");
+//     if (pose.x >= n_rows or pose.x < 0 or pose.y >= n_columns or pose.y < 0){
+//         throw std::invalid_argument(pose_name  + " not in map!");
 //     }
-//     if (pickup_pose.x >= n_rows or pickup_pose.x < 0 or pickup_pose.y >= n_columns or pickup_pose.y < 0){
-//         throw std::invalid_argument("Pickup pose not in map!");
-//     }
-//     if (dropoff_pose.x >= n_rows or dropoff_pose.x < 0 or dropoff_pose.y >= n_columns or dropoff_pose.y < 0){
-//         throw std::invalid_argument("Dropoff pose not in map!");
+//     if (map[pose.x][pose.y] == 1){
+//         throw std::invalid_argument(pose_name + " not free!");
 //     }
 
-//     // Check if poses are in open space
-//     if (map[initial_pose.x][initial_pose.y] == 1){
-//         throw std::invalid_argument("Initial pose not free!");
-//     }
-//     if (map[pickup_pose.x][pickup_pose.y] == 1){
-//         throw std::invalid_argument("Pickup pose not free!");
-//     }
-//     if (map[dropoff_pose.x][dropoff_pose.y] == 1){
-//         throw std::invalid_argument("Dropoff pose not free!");
-//     }
-
-//     return;
+//     return pose;
 // }
+

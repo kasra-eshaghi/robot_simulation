@@ -28,8 +28,8 @@ class Problem {
         void print_problem_config();
 
     private:
-        std::vector<std::vector<int>> get_map_data(std::ifstream& csv_file);
-        Pose get_pose_data(const YAML::Node& config_yaml, const std::string& pose_name);
+        // std::vector<std::vector<int>> get_map_data(std::ifstream& csv_file);
+        // Pose get_pose_data(const YAML::Node& config_yaml, const std::string& pose_name);
         // void check_pose_data();
 
 };
