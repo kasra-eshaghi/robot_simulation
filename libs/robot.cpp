@@ -1,34 +1,47 @@
 #include "robot.h"
 
-Robot::Robot(YAML::Node& config_yaml){
-
-    // Get map
-    map_hat = get_map_data(config_yaml);
-
-    // Get pose
-    pose_pickup = get_pose_data(config_yaml, "pose_pickup");
-    pose_dropoff = get_pose_data(config_yaml, "pose_dropoff");
-
-    // Set status to exploration
-    status = "exploration";
+Robot::Robot(){
 
 }
 
-int Robot::calculate_motion_command(Proximity_measurements& measurements){
-    // calculates motion commands for robot to randomly move in the environment
+Robot::Robot(const Pose& pose_init){
+    pose = pose_init;
+}
 
-    // Find all open directions
-    std::vector<int> open_directions;
-    for (int i=0; i<4; i++){
-        if (!measurements.data[i]){
-            open_directions.push_back(i);
+Robot::Robot(const YAML::Node &config_yaml, const std::string &pose_init_name){
+    create(config_yaml, pose_init_name);
+}
+
+void Robot::create(const YAML::Node &config_yaml, const std::string &pose_init_name){
+    
+    pose.x =  config_yaml[pose_init_name][0].as<int>();
+    pose.y =  config_yaml[pose_init_name][1].as<int>();
+}
+
+void Robot::get_contact_data(const Map& map){
+        // get sensor measurements assuming robot is oriented with map
+        for (int i=0; i < contact_data.size(); i++){
+            Pose pose_temp = pose;
+            if (i == 0){
+                pose_temp.x += 1;
+            } else if (i == 1){
+                pose_temp.y +=1;
+            } else if (i == 2){
+                pose_temp.x -= 1;
+            } else {
+                pose_temp.y -= 1;
+            }
+            contact_data[i] = check_occupancy(map, pose_temp);
         }
-    }
+    
+        // // rotate measurements
+        // std::rotate(contact_data.begin(), contact_data.begin() + pose.theta, contact_data.end());
+    
+}
 
-    // randomly choose a direction
-    int command;
-    std::sample(open_directions.begin(), open_directions.end(), &command, 1, std::mt19937 {std::random_device{}()});
-
-    return command;
-
+/// @brief Executes the motion commands of the robot by updating the true pose of the robot
+/// @param motion_command motion command (delta pose)
+void Robot::execute_motion_commands(const Pose &motion_command)
+{
+    pose = pose + motion_command;
 }

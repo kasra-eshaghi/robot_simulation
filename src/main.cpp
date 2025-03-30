@@ -6,14 +6,20 @@
 
 #include <iostream>
 #include <thread>
+#include <string>
 
 #include "yaml-cpp/yaml.h"
-#include <SFML/Graphics.hpp>
+// #include <SFML/Graphics.hpp>
 
-#include "simulator.h"
-#include "robot.h"
+
+#include "world.h"
+#include "behavior_controller.h"
+#include "visualization.h"
+
 
 int main(int argc, char* argv[]){
+
+
 
     // Read input configuration file
     std::string config_file_name;
@@ -26,143 +32,82 @@ int main(int argc, char* argv[]){
         std::cout << "Read config file name: " << config_file_name << std::endl;
         config_yaml = YAML::LoadFile(config_file_name);
     }
-    
-    // Create simulator class
-    Simulator simulator(config_yaml);
 
-    std::cout << "Simulator" << std::endl;
-    std::cout << "Pose: " << simulator.pose_true << std::endl;
-    std::cout << "Map: " << std::endl;
-    std::cout << simulator.map_true << std::endl;
+    // Craete simulated (true) world
+    World world_true(config_yaml, "pose_initial", "map");
 
-    // Create robot class
-    Robot robot(config_yaml);
-    std::cout << "Robot" << std::endl;
-    std::cout << "Pose pickup: " << robot.pose_pickup << std::endl;
-    std::cout << "Pose dropoff: " << robot.pose_dropoff << std::endl;
-    std::cout << "Map: " << std::endl;
-    std::cout << robot.map_hat << std::endl;
+    // Create behavior controller for robot
+    Behavior_Controller bc(config_yaml, "pose_initial_hat", "map_hat");
 
+    // Create visualization class
+    Visuals visuals(config_yaml, world_true.map);
 
-    // std::cout << "Initial pose: " << simulator.pose_true << std::endl;
-
-    // // get sensor measurements
-    // simulator.get_sensor_data();
-    // std::cout << "Proximity measurements: " << simulator.proximity_measurements << std::endl;
-
-    // // calculate motion commands
-    // int command = robot.calculate_motion_command(simulator.proximity_measurements);
-    // command = 3;
-    // std::cout << "Command: " << command << std::endl;
-
-    // // execute motion command
-    // simulator.execute_motion_command(command);
-
-    // // print updated pose
-    // std::cout << "New pose: " << simulator.pose_true << std::endl;
-
-    // // get sensor measurements
-    // simulator.get_sensor_data();
-    // std::cout << "New proximity measurements: " << simulator.proximity_measurements << std::endl;
-
-
-
-
-    // create window
-    int cell_size = 100;
-    int width = simulator.map_true.n_columns * cell_size;
-    int height = simulator.map_true.n_rows * cell_size;
-    sf::RenderWindow window(sf::VideoMode(width, height), "Robot Simulation");
-
-    // create background texture
-    sf::RenderTexture background_texture;
-    background_texture.create(width, height);
-    background_texture.clear(sf::Color::White);
-    for (int row_num = 0; row_num < simulator.map_true.n_rows; row_num++){
-        for (int column_num = 0; column_num < simulator.map_true.n_columns; column_num++){
-            sf::RectangleShape obstacle(sf::Vector2f(cell_size, cell_size));
-            obstacle.setPosition((row_num)*cell_size, column_num*cell_size);
-            if (simulator.map_true.data[column_num][row_num]){
-                obstacle.setFillColor(sf::Color::Black);
-            } else {
-                obstacle.setFillColor(sf::Color::White);
-            }
-            background_texture.draw(obstacle);
-        }
-    }
-    background_texture.display();
-
-    // create background sprite out of texture
-    sf::Sprite background_sprite(background_texture.getTexture());
-
-    // Create robot shape
-    sf::RectangleShape robot_shape(sf::Vector2f(cell_size, cell_size));
-    robot_shape.setFillColor(sf::Color::Red);
-
-    // Create robot direction shape
-    sf::RectangleShape direction_shape(sf::Vector2f(cell_size / 2, 10));
-    direction_shape.setFillColor(sf::Color::Blue);
-
-
-    while (window.isOpen()){
+    int iteration = 0;
+    while (visuals.window.isOpen() and iteration < 100){
+        // Visualization
         sf::Event event;
-        while (window.pollEvent(event)){
+        while (visuals.window.pollEvent(event)){
             if (event.type == sf::Event::Closed){
-                window.close();
+                visuals.window.close();
             }
         }
-        // Clear window
-        window.clear();
+        visuals.clear_draw_display(world_true.robot.pose, bc.lm);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-        // Draw background
-        window.draw(background_sprite);
 
-        // Draw robot
-        robot_shape.setPosition(simulator.pose_true.y*cell_size, simulator.pose_true.x*cell_size);
-        window.draw(robot_shape);
+        // std::cout << "iteration " << iteration << std::endl;
+        // std::cout << "true pose: " << world_true.robot.pose;
+        
+        // Get sensor measurements 
+        world_true.robot.get_contact_data(world_true.map);
 
-        // Draw direction
-        direction_shape.setPosition(simulator.pose_true.y*cell_size + cell_size/2, simulator.pose_true.x*cell_size + cell_size/2);
-        int angle;
-        switch (simulator.pose_true.theta){
-            case 0:
-                angle = 0;
-                break;
-            case 1:
-                angle = 270;
-                break;
-            case 2:
-                angle = 180;
-                break;
-            case 3:
-                angle = 90;
-                break;
-        }
-        direction_shape.setRotation(angle);
-        window.draw(direction_shape);
+        // std::cout << "contact data: ";
+        // world_true.robot.print_contact_data();
 
-        // std::cout << simulator.pose_true << std::endl;
+        // Give sensor measurements to behavior controller and get motion commands
+        Pose command = bc.determine_next_command(world_true.robot.contact_data);
 
-        // Display window
-        window.display();
+        // std::cout << "command:" << command; 
 
-        // get sensor measurements
-        simulator.get_sensor_data();
+        // // Execute motion commands of robot
+        world_true.robot.execute_motion_commands(command);
 
-        // calculate and execute motion commands
-        int command = robot.calculate_motion_command(simulator.proximity_measurements);
-        simulator.execute_motion_command(command);
-
-        std::cout << "Proximity measurements: " << simulator.proximity_measurements << std::endl;
-        std::cout << "Command: " << command << std::endl;
-
-        // Pause
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        ++iteration;
 
 
     }
-    
+
 
 
     return 0;
 }
+
+
+
+
+
+    // // while (visuals.window.isOpen()){
+    // //     sf::Event event;
+    // //     while (visuals.window.pollEvent(event)){
+    // //         if (event.type == sf::Event::Closed){
+    // //             visuals.window.close();
+    // //         }
+    // //     }
+
+    // //     // display window
+    // //     visuals.clear_draw_display(simulator.pose_true);
+
+    // //     // get sensor measurements
+    // //     simulator.get_sensor_data();
+
+    // //     // calculate and execute motion commands
+    // //     int command = robot.calculate_motion_command(simulator.proximity_measurements);
+    // //     simulator.execute_motion_command(command);
+
+    // //     std::cout << "Proximity measurements: " << simulator.proximity_measurements << std::endl;
+    // //     std::cout << "Command: " << command << std::endl;
+
+    // //     // Pause
+    // //     std::this_thread::sleep_for(std::chrono::milliseconds(visuals.frame_rate));
+
+    // // }

@@ -2,21 +2,39 @@
 #define ROBOT_H
 
 #include <string>
-#include <random>
+#include <array>
+
+#include "yaml-cpp/yaml.h"
 
 #include "data_types.h"
-
+#include "helper_functions.h"
 
 class Robot {
     public:
-        Robot(YAML::Node& config_yaml);
+        // variables
+        Pose pose;
+        std::array<bool, 4> contact_data;
 
-        Map map_hat;
-        Pose pose_hat, pose_pickup, pose_dropoff; 
-        std::string status;
+        Robot();
+        Robot(const Pose& pose_init);
+        Robot(const YAML::Node& config_yaml, const std::string& pose_init_name);
 
-        int calculate_motion_command(Proximity_measurements& measurements);
+        void create(const YAML::Node& config_yaml, const std::string& pose_name);
+        void get_contact_data(const Map& map);
+        void execute_motion_commands(const Pose& motion_command);
+
+        void print_contact_data(){
+            std::cout << "(" << contact_data[0] << ", " << contact_data[1] << ", " << contact_data[2] << ", " << contact_data[3] << ")" << std::endl;
+
+        }
+
 
 };
+
+// std::ostream &operator<<(std::ostream &os, std::array<bool, 4> contact_data)
+// {
+//     os << "(" << contact_data[0] << ", " << contact_data[1] << ", " << contact_data[2] << ", " << contact_data[3] << ")" << std::endl;
+//     return os;
+// }
 
 #endif

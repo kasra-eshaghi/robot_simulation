@@ -1,6 +1,12 @@
-Plan:
-    simulate a maze solving robot. The robot is initialized at an unknown position within a known map. It then has to localize, find its way to a pick up point, and then find its way to a dropoff point.
-Subtasks:
-    1. Find a way for operator to give the inputs to the system (map, initial position, goal position, etc.)
-    2. Plan structure for simulating robot with drive, sensor measurements, and anything else needed
-
+Tasks:
+    Convert everything to screen coordinates DONE
+    make graphic generation its own class DONE
+    provide graphics inputs through yaml file DONE
+    create localization function
+        randmly generate points in environment
+            number of points should be made based on map
+            get sensor measurements
+            remove points that don't match measurements
+            select a place to 
+            execute commands
+            repeat 

@@ -10,27 +10,24 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 find_package(yaml-cpp REQUIRED)
 find_package(SFML COMPONENTS graphics REQUIRED)
 
-# Add internal packages
-# add_library(problem_description libs/problem_description.cpp) 
-# target_link_libraries(problem_description yaml-cpp)
-
-# add_library(coordinator libs/coordinator.cpp)
-add_library(simulator libs/simulator.cpp)
-add_library(data_types libs/data_types.cpp)
+add_library(world libs/world.cpp)
 add_library(robot libs/robot.cpp)
+add_library(helper_functions libs/helper_functions.cpp)
+add_library(data_types libs/data_types.cpp)
+add_library(visualization libs/visualization.cpp)
 
-target_link_libraries(simulator data_types)
-target_link_libraries(robot data_types)
-# add_library(robot libs/robot.cpp)
-# target_link_libraries(coordinator yaml-cpp simulator robot)
+add_library(planning_module libs/planning_module.cpp)
+add_library(localization_module libs/localization_module.cpp)
+add_library(behavior_controller libs/behavior_controller.cpp)
+
+target_link_libraries(robot helper_functions data_types)
+target_link_libraries(world yaml-cpp robot data_types)
+target_link_libraries(visualization sfml-graphics data_types)
+target_link_libraries(behavior_controller planning_module localization_module world yaml-cpp)
 
 # Create executable
-# add_executable(read_config src/read_config.cpp)
 add_executable(main src/main.cpp)
 
 # Link libraries
-# target_link_libraries(read_config problem_description)
-target_link_libraries(main yaml-cpp sfml-graphics simulator robot)
+target_link_libraries(main yaml-cpp sfml-graphics robot world behavior_controller visualization)
 
-# add_executable(hello_world src/hello_world.cpp)
-# add_executable(give_commands src/give_commands.cpp)

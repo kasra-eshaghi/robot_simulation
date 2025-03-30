@@ -19,12 +19,8 @@ class Simulator {
 
         void get_sensor_data();
         void execute_motion_command(int motion_command);
-    //     void print_sensor_data();
+
         
-
-
-
-
 };
 
 
